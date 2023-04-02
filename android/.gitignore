@@ -1,0 +1,41 @@
+# Flutter/Dart specific
+**/build/
+**/ios/Pods/
+**/.ios/
+**/.android/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+# Android specific
+**/gradle.properties
+**/local.properties
+**/android/key.properties
+**/android/app/debug.keystore
+**/android/app/release.keystore
+# Do not share the following file, your keystore password is in it!
+**/android/key.jks
+# IntelliJ related
+**/*.iml
+**/*.ipr
+**/*.iws
+.idea/
+# VS Code related
+**/.vscode/
+*.code-workspace
+# Flutter/Dart/Pub related
+**/*.dart.tools
+**/*.flutter-plugins
+**/*.flutter-plugins-dependencies
+**/*.g.dart
+**/.idea/
+# Android Studio
+**/.gradle/
+**/captures/
+**/local.properties
+**/gradlew
+**/gradlew.bat
+**/GeneratedPluginRegistrant.java
