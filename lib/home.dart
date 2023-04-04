@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:saemobile/Favoris.dart';
 import 'package:saemobile/ListeArticle.dart';
 import 'package:saemobile/Panier.dart';
@@ -7,7 +8,6 @@ import 'package:saemobile/viewmodel/panierviewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:saemobile/AuthProvider.dart';
 import 'package:saemobile/LoginPage.dart';
-
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key, required this.title, required this.widgetOptions})
@@ -28,7 +28,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     Provider.of<FavorisViewModel>(context, listen: false).loadFavorites();
-    _updateNombreArticlesPanier(); // appel de la méthode pour mettre à jour le nombre d'articles dans le panier
+    _updateNombreArticlesPanier();
   }
 
   @override
@@ -58,7 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
   void _onPanierChange() {
     _updateNombreArticlesPanier();
   }
@@ -76,7 +75,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
-
 
   void _updateNombreArticlesPanier() {
     final panierViewModel = Provider.of<PanierViewModel>(context, listen: false);

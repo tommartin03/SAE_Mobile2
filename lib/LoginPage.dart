@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:saemobile/AuthProvider.dart';
 import 'package:saemobile/ListeArticle.dart';
 import 'package:saemobile/viewmodel/panierviewmodel.dart';
+import 'package:saemobile/welcome_screen.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -30,13 +31,19 @@ class _LoginPageState extends State<LoginPage> {
         .then((_) {
       Provider.of<PanierViewModel>(context, listen: false)
           .loadPanier(_username);
-    })
-        .catchError((error) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      ).then((value) {
+        // This block of code will be executed when the user clicks on "Continuer"
+        Navigator.pop(context);
+      });
+    }).catchError((error) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.toString())));
     });
-    Navigator.pop(context);
   }
+
 
 
   @override

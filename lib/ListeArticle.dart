@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:saemobile/viewmodel/favorisviewmodel.dart';
 import 'package:saemobile/viewmodel/panierviewmodel.dart';
 import 'package:saemobile/AuthProvider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class Vue1 extends StatefulWidget {
@@ -59,17 +60,25 @@ class _Vue1State extends State<Vue1> {
     return favorites.contains(article);
   }
 
-  void _addToFavorites(BuildContext context, Article article) {
+  void _addToFavorites(BuildContext context, Article article) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.user == null) {
       _showLoginPopup(context);
       return;
     }
-    Provider.of<FavorisViewModel>(context, listen: false).ajouter(article);
+    final favorites = Provider.of<FavorisViewModel>(context, listen: false);
+    await favorites.ajouter(article);
+    final prefs = await SharedPreferences.getInstance();
+    final favorisJson = jsonEncode(favorites.favoris.map((f) => f.toJson()).toList());
+    await prefs.setString('favoris', favorisJson);
   }
 
-  void _removeFromFavorites(Article article) {
-    Provider.of<FavorisViewModel>(context, listen: false).supprimer(article);
+  void _removeFromFavorites(Article article) async {
+    final favorites = Provider.of<FavorisViewModel>(context, listen: false);
+    await favorites.supprimer(article);
+    final prefs = await SharedPreferences.getInstance();
+    final favorisJson = jsonEncode(favorites.favoris.map((f) => f.toJson()).toList());
+    await prefs.setString('favoris', favorisJson);
   }
 
   Icon _getFavoriteIcon(Article article) {
