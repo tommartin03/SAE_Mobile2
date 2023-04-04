@@ -8,7 +8,6 @@ import 'package:saemobile/viewmodel/panierviewmodel.dart';
 import 'package:saemobile/AuthProvider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class Vue1 extends StatefulWidget {
   @override
   _Vue1State createState() => _Vue1State();
@@ -16,6 +15,9 @@ class Vue1 extends StatefulWidget {
 
 class _Vue1State extends State<Vue1> {
   List<Article> _articles = [];
+  List<Article> _filteredArticles = [];
+  TextEditingController _searchController = TextEditingController();
+  bool _isPriceSortedAscending = true;
 
   @override
   void initState() {
@@ -32,6 +34,7 @@ class _Vue1State extends State<Vue1> {
     final jsonData = json.decode(response.body);
     setState(() {
       _articles = (jsonData as List).map((item) => Article.fromJson(item)).toList();
+      _filteredArticles = _articles;
     });
   }
 
@@ -81,11 +84,18 @@ class _Vue1State extends State<Vue1> {
     await prefs.setString('favoris', favorisJson);
   }
 
-  Icon _getFavoriteIcon(Article article) {
-    final favorites = Provider.of<FavorisViewModel>(context, listen: false).favoris;
-    final isFavorite = favorites.contains(article);
-    return isFavorite ? Icon(Icons.favorite, color: Colors.red) : Icon(Icons.favorite_border);
+  Widget _getFavoriteIcon(Article article) {
+    return Consumer<FavorisViewModel>(
+      builder: (context, favorisViewModel, child) {
+        final favorites = favorisViewModel.favoris;
+        final isFavorite = favorites.contains(article);
+        return isFavorite
+            ? Icon(Icons.favorite, color: Colors.red)
+            : Icon(Icons.favorite_border);
+      },
+    );
   }
+
 
   bool _isArticleInPanier(Article article) {
     final panier = Provider.of<PanierViewModel>(context, listen: false).articles;
@@ -132,78 +142,122 @@ class _Vue1State extends State<Vue1> {
     });
   }
 
+  void _filterArticles(String searchTerm) {
+    if (searchTerm.isEmpty) {
+      setState(() {
+        _filteredArticles = _articles;
+      });
+      return;
+    }
+
+    final filtered = _articles.where((article) => article.title.toLowerCase().contains(searchTerm.toLowerCase())).toList();
+    setState(() {
+      _filteredArticles = filtered;
+    });
+  }
+
+  void _sortArticlesByPrice() {
+    setState(() {
+      if (_isPriceSortedAscending) {
+        _filteredArticles.sort((a, b) => a.price.compareTo(b.price));
+      } else {
+        _filteredArticles.sort((a, b) => b.price.compareTo(a.price));
+      }
+      _isPriceSortedAscending = !_isPriceSortedAscending;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.7,
-      ),
-      itemCount: _articles.length,
-      itemBuilder: (context, index) {
-        final article = _articles[index];
-        return Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Image.network(
-                  article.image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: 150.0,
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(8),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              labelText: 'Rechercher',
+              hintText: 'Rechercher un article',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(25),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  article.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  '\$${article.price}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-              SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Consumer<FavorisViewModel>(
-                    builder: (context, favorisViewModel, child) {
-                      return IconButton(
-                        icon: _getFavoriteIcon(article),
-                        onPressed: () {
-                          if (_isArticleFavorite(article)) {
-                            _removeFromFavorites(article);
-                          } else {
-                            _addToFavorites(context, article);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                  _getPanierButton(article),
-                ],
-              ),
-            ],
+            ),
+            onChanged: (value) {
+              _filterArticles(value);
+            },
           ),
-        );
-      },
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              icon: Icon(_isPriceSortedAscending ? Icons.arrow_downward : Icons.arrow_upward),
+              onPressed: _sortArticlesByPrice,
+            ),
+          ],
+        ),
+        Expanded(
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.7,
+            ),
+            itemCount: _filteredArticles.length,
+            itemBuilder: (context, index) {
+              final article = _filteredArticles[index];
+              return Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Image.network(
+                        article.image,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 150.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        article.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    Text(
+                      '\$${article.price.toStringAsFixed(2)}',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: _getFavoriteIcon(article),
+                          onPressed: () {
+                            if (_isArticleFavorite(article)) {
+                              _removeFromFavorites(article);
+                            } else {
+                              _addToFavorites(context, article);
+                            }
+                          },
+                        ),
+                        _getPanierButton(article),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
-
